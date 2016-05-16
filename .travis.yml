@@ -2,5 +2,8 @@ language: objective-c
 osx_image: xcode7.3
 sudo: false
 
-script: xcodebuild clean test -scheme Die
-after_script: bash <(curl -s https://codecov.io/bash)
+script:
+    - set pipefail
+    - xcodebuild clean test -scheme Die | xcpretty
+after_script:
+    - bash <(curl -s https://codecov.io/bash)
