@@ -1,5 +1,5 @@
 ## Die, μ-framework to exit swift scripts    
-[![Build Status](https://travis-ci.org/daehn/die.svg?branch=feature%2Fswitch-to-travis)](https://travis-ci.org/daehn/die) [![codecov.io](https://codecov.io/github/daehn/die/coverage.svg?branch=develop)](https://codecov.io/github/daehn/die?branch=develop) ![Swift 2.2](https://img.shields.io/badge/Swift-2.2-orange.svg?style=flat)
+[![Build Status](https://travis-ci.org/daehn/die.svg?branch=feature%2Fswitch-to-travis)](https://travis-ci.org/daehn/die) [![codecov.io](https://codecov.io/github/daehn/die/coverage.svg?branch=develop)](https://codecov.io/github/daehn/die?branch=develop) ![Swift 2.2](https://img.shields.io/badge/Swift-3.0-orange.svg?style=flat)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 
 ### Usage
