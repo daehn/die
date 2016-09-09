@@ -54,7 +54,7 @@ public func dieOnThrow<T>(_ message: @autoclosure () -> String = String(), file:
 
 // MARK: - Testing
 
-// The following varaiables provide a way to inject different behaviours for testing
+// The following variables provide a way to inject different behaviours when testing
 var internalExit = exit
 var internalPrint = _internalPrint
 

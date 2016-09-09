@@ -1,9 +1,0 @@
-machine:
-  xcode:
-    version: "7.3"
-
-test:
-  override:
-    - xcodebuild clean test -scheme Die
-  post:
-    - bash <(curl -s https://codecov.io/bash)
