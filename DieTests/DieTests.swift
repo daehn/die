@@ -9,26 +9,26 @@
 import XCTest
 @testable import Die
 
-extension String: ErrorType {}
+extension String: Error {}
 
 class DieTests: XCTestCase {
 
     var callCount = 0
     var exitStatus: Int32?
     var printHistory = [String]()
-    var expectation: XCTestExpectation?
+    var testExpectation: XCTestExpectation?
 
     // MARK: - Mocking
 
-    @noreturn private func mockExit(status: Int32) {
+    private func mockExit(_ status: Int32) -> Never  {
         exitStatus = status
         callCount += 1
-        expectation?.fulfill()
-        repeat { NSThread.sleepForTimeInterval(0.1) } while (true)
+        testExpectation?.fulfill()
+        repeat { Thread.sleep(forTimeInterval: 0.1) } while (true)
     }
 
-    func mockPrint(items: Any...) {
-        printHistory.appendContentsOf(items.flatMap { $0 as? String })
+    func mockPrint(_ items: Any...) {
+        printHistory.append(contentsOf: items.flatMap { $0 as? String })
     }
 
     // MARK: - Setup
@@ -41,7 +41,7 @@ class DieTests: XCTestCase {
     
     override func tearDown() {
         (internalExit, internalPrint) = (exit, _internalPrint)
-        expectation = nil
+        testExpectation = nil
         super.tearDown()
     }
 
@@ -78,21 +78,21 @@ class DieTests: XCTestCase {
     func testThatItDoesNotCallDieIfFalseIfExpressionEvalutesToTrue() {
         assertThatItCallsDie(false) {
             dieIfFalse(true)
-            self.expectation?.fulfill()
+            self.testExpectation?.fulfill()
         }
     }
 
     func testThatItCallsDieIfTrueIfExpressionEvalutesToTrue() {
         assertThatItCallsDie {
             dieIfTrue(true)
-            self.expectation?.fulfill()
+            self.testExpectation?.fulfill()
         }
     }
 
     func testThatItDoesNotCallDieIfTrueIfExpressionEvalutesToFalse() {
         assertThatItCallsDie(false) {
             dieIfTrue(false)
-            self.expectation?.fulfill()
+            self.testExpectation?.fulfill()
         }
     }
 
@@ -110,10 +110,10 @@ class DieTests: XCTestCase {
     }
 
     func testThatItCallsDieIfNil() {
-        let optional: Int? = .None
+        let optional: Int? = .none
         
         assertThatItCallsDie {
-            dieIfNil(optional)
+            _ = dieIfNil(optional)
         }
     }
 
@@ -123,7 +123,7 @@ class DieTests: XCTestCase {
 
         assertThatItCallsDie(false) {
             result = dieIfNil(42)
-            self.expectation?.fulfill()
+            self.testExpectation?.fulfill()
         }
 
         // then
@@ -162,7 +162,7 @@ class DieTests: XCTestCase {
         var solution: Int?
         assertThatItCallsDie(false) {
              solution = dieOnThrow {
-                self.expectation?.fulfill()
+                self.testExpectation?.fulfill()
                 return 42
             }
         }
@@ -173,7 +173,7 @@ class DieTests: XCTestCase {
 
     // MARK: - Helper
 
-    func assertThatItCallsDie(shouldCall: Bool = true, line: UInt = #line , file: String = #file, block: () -> Void) {
+    func assertThatItCallsDie(_ shouldCall: Bool = true, line: UInt = #line , file: String = #file, block: @escaping () -> Void) {
         // when
         dispatchAndWaitForDie(timeout: 2, block: block)
 
@@ -181,30 +181,30 @@ class DieTests: XCTestCase {
         let expectedCount = shouldCall ? 1 : 0
         let expectedStatus: Int32? = shouldCall ? EXIT_FAILURE : nil
         let (countEqual, statusEqual) = (callCount == expectedCount, exitStatus == expectedStatus)
-        let fail: String -> Void = { self.recordFailureWithDescription($0, inFile: file, atLine: line, expected: true) }
+        let fail: (String) -> Void = { self.recordFailure(withDescription: $0, inFile: file, atLine: line, expected: true) }
         if !countEqual { fail("Incorrect die callcount, \(expectedCount) is not equal to \(callCount)") }
         if !statusEqual { fail("Incorrect exit status, \(expectedStatus) is not equal to \(exitStatus)") }
     }
 
-    func assertMessagePrinted(message: String, _ history: [String], file: StaticString = #file, line: UInt) {
-        guard let historyMessage = history.first, location = history.last else { return XCTFail() }
+    func assertMessagePrinted(_ message: String, _ history: [String], file: StaticString = #file, line: UInt) {
+        guard let historyMessage = history.first, let location = history.last else { return XCTFail() }
         XCTAssertEqual(historyMessage, message)
-        XCTAssertTrue(location.containsString(String(file)))
-        XCTAssertTrue(location.containsString("line \(line)"))
+        XCTAssertTrue(location.contains(String(describing: file)))
+        XCTAssertTrue(location.contains("line \(line)"))
     }
 
-    func dispatch(block: dispatch_block_t) {
-        let queue = dispatch_queue_create("test", DISPATCH_QUEUE_SERIAL)
-        dispatch_async(queue, block)
+    func dispatch(_ block: @escaping ()->()) {
+        let queue = DispatchQueue(label: "test", attributes: [])
+        queue.async(execute: block)
     }
 
-    func waitWithTimeout(timeout: NSTimeInterval, block: dispatch_block_t) {
-        expectation = expectationWithDescription("Wait for die() to be called")
+    func waitWithTimeout(_ timeout: TimeInterval, block: ()->()) {
+        testExpectation = expectation(description: "Wait for die() to be called")
         block()
-        waitForExpectationsWithTimeout(timeout, handler: nil)
+        waitForExpectations(timeout: timeout, handler: nil)
     }
 
-    func dispatchAndWaitForDie(timeout timeout: NSTimeInterval, block: dispatch_block_t) {
+    func dispatchAndWaitForDie(timeout: TimeInterval, block: @escaping ()->()) {
         waitWithTimeout(timeout) {
             self.dispatch(block)
         }
